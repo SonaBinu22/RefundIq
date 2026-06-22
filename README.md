@@ -7,7 +7,6 @@ A fraud-aware refund management system built with Flask. It analyzes refund requ
 - Customer portal to submit refund requests with photo/video/invoice evidence
 - Automated fraud scoring (0–100) using computer vision and OCR
 - Admin panel to review, approve, or reject refund requests
-- JWT-based authentication with bcrypt password hashing
 - Rate limiting on login and registration endpoints
 
 ## Tech Stack
@@ -53,28 +52,6 @@ python app.py
 
 Open `http://127.0.0.1:5000`
 
-## Default Admin Account
 
-On first run a default admin is created. **Change the password immediately.**
 
-| Field    | Value                  |
-|----------|------------------------|
-| Email    | admin@refundiq.com     |
-| Password | admin123               |
 
-Change password via `POST /api/change-password` with a valid JWT token.
-
-## API Endpoints
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/register` | — | Register a new customer |
-| POST | `/api/login` | — | Login and get JWT token |
-| GET | `/api/me` | JWT | Get current user info |
-| POST | `/api/change-password` | JWT | Change password |
-| POST | `/api/submit-refund` | JWT | Submit a refund request |
-| GET | `/api/my-refunds` | JWT | List own refund requests |
-| GET | `/api/refund/<id>` | JWT | Get a specific refund |
-| GET | `/api/admin/refunds` | Admin JWT | List all refunds |
-| POST | `/api/admin/refund/<id>/decision` | Admin JWT | Approve or reject |
-| GET | `/api/admin/users` | Admin JWT | List all users |
