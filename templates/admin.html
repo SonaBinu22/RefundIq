@@ -3,207 +3,387 @@
 <head>
   <meta charset="UTF-8">
   <title>RefundIQ+ – Admin Panel</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; }
-    nav { background: #1a1a2e; color: #fff; padding: 0 30px; display: flex; align-items: center; justify-content: space-between; height: 60px; }
-    nav h1 { font-size: 20px; } nav h1 span { color: #f39c12; }
-    nav .nav-right { display: flex; gap: 16px; align-items: center; }
-    nav button { background: transparent; border: 1px solid #f39c12; color: #f39c12; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; }
-    nav button:hover { background: #f39c12; color: #1a1a2e; }
-    .main { max-width: 1100px; margin: 28px auto; padding: 0 20px; }
-    .filters { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-    select { padding: 9px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: #fff; }
-    .table-wrap { background: #fff; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.07); overflow: hidden; }
-    table { width: 100%; border-collapse: collapse; }
-    th { background: #1a1a2e; color: #fff; padding: 13px 16px; text-align: left; font-size: 13px; }
-    td { padding: 13px 16px; font-size: 13px; color: #333; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
-    tr:hover { background: #fafafa; }
-    .badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: capitalize; white-space: nowrap; }
-    .badge.pending { background: #fff3cd; color: #856404; }
-    .badge.approved { background: #d4edda; color: #155724; }
-    .badge.rejected { background: #f8d7da; color: #721c24; }
-    .badge.needs_evidence { background: #d1ecf1; color: #0c5460; }
-    .risk-low { color: #27ae60; font-weight: 600; }
-    .risk-medium { color: #f39c12; font-weight: 600; }
-    .risk-high { color: #e74c3c; font-weight: 600; }
-    .btn-sm { padding: 5px 12px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
-    .btn-approve { background: #d4edda; color: #155724; }
-    .btn-reject { background: #f8d7da; color: #721c24; }
-    .btn-approve:hover { background: #b7d7be; }
-    .btn-reject:hover { background: #e0b0b5; }
-    .empty { text-align: center; padding: 50px; color: #aaa; }
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
-    .modal-overlay.show { display: flex; }
-    .modal { background: #fff; border-radius: 14px; padding: 28px; width: 100%; max-width: 500px; }
-    .modal h3 { margin-bottom: 18px; }
-    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
-    .detail-row .key { color: #888; }
-    .breakdown-item { background: #fef9e7; border-radius: 6px; padding: 8px 12px; margin-bottom: 6px; font-size: 13px; }
-    textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; margin-top: 12px; }
-    .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
-    .btn-primary { background: #007bff; color: #fff; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
-    .btn-secondary { background: #eee; color: #333; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
-    .stats { display: flex; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
-    .stat-card { background: #fff; border-radius: 12px; padding: 18px 24px; flex: 1; min-width: 140px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
-    .stat-card .val { font-size: 28px; font-weight: 700; color: #1a1a2e; }
-    .stat-card .lbl { font-size: 12px; color: #888; margin-top: 4px; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;color:#333}
+    nav{background:#1a1a2e;color:#fff;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;z-index:50}
+    nav h1{font-size:19px} nav h1 span{color:#f39c12}
+    .nav-tabs{display:flex;gap:4px}
+    .nav-tab{padding:8px 16px;cursor:pointer;color:#aaa;border-radius:6px;font-size:13px;transition:all .2s}
+    .nav-tab.active,.nav-tab:hover{background:rgba(255,255,255,.1);color:#fff}
+    .nav-right{display:flex;gap:12px;align-items:center}
+    .nav-right span{font-size:13px;color:#ccc}
+    .btn-nav{background:transparent;border:1px solid #f39c12;color:#f39c12;padding:5px 14px;border-radius:6px;cursor:pointer;font-size:12px}
+    .btn-nav:hover{background:#f39c12;color:#1a1a2e}
+    .page{display:none;padding:24px 28px;max-width:1200px;margin:0 auto}
+    .page.active{display:block}
+    /* Stats */
+    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+    .stat{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+    .stat .val{font-size:30px;font-weight:700;color:#1a1a2e}
+    .stat .lbl{font-size:12px;color:#888;margin-top:4px}
+    /* Charts */
+    .charts{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px}
+    .chart-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+    .chart-card h3{font-size:14px;color:#555;margin-bottom:14px}
+    /* Table */
+    .table-wrap{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);overflow:hidden}
+    .table-toolbar{padding:14px 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-bottom:1px solid #f0f0f0}
+    table{width:100%;border-collapse:collapse}
+    th{background:#1a1a2e;color:#fff;padding:11px 14px;text-align:left;font-size:12px;white-space:nowrap}
+    td{padding:11px 14px;font-size:12px;border-bottom:1px solid #f5f5f5;vertical-align:middle}
+    tr:hover{background:#fafafa}
+    .badge{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+    .badge.pending{background:#fff3cd;color:#856404}
+    .badge.approved{background:#d4edda;color:#155724}
+    .badge.rejected{background:#f8d7da;color:#721c24}
+    .badge.needs_evidence{background:#d1ecf1;color:#0c5460}
+    .risk-low{color:#27ae60;font-weight:600}
+    .risk-medium{color:#f39c12;font-weight:600}
+    .risk-high{color:#e74c3c;font-weight:600}
+    select,input[type=text]{padding:8px 12px;border:1px solid #ddd;border-radius:7px;font-size:13px;background:#fff}
+    .btn{padding:8px 16px;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer}
+    .btn-primary{background:#007bff;color:#fff}
+    .btn-success{background:#27ae60;color:#fff}
+    .btn-danger{background:#e74c3c;color:#fff}
+    .btn-secondary{background:#eee;color:#333}
+    .btn-sm{padding:4px 10px;font-size:11px}
+    /* Modal */
+    .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+    .overlay.show{display:flex}
+    .modal{background:#fff;border-radius:14px;padding:28px;width:100%;max-width:620px;max-height:88vh;overflow-y:auto}
+    .modal h3{margin-bottom:18px;font-size:17px;color:#1a1a2e}
+    .detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:13px}
+    .detail-row .k{color:#888;min-width:130px}
+    .factor-item{background:#fef9e7;border-left:3px solid #f39c12;padding:8px 12px;margin:5px 0;border-radius:0 6px 6px 0;font-size:12px}
+    .factor-item.high{border-color:#e74c3c;background:#fff5f5}
+    .factor-item.low{border-color:#27ae60;background:#f0fff4}
+    .timeline-item{display:flex;gap:12px;padding:8px 0;font-size:12px}
+    .timeline-dot{width:10px;height:10px;border-radius:50%;background:#007bff;margin-top:3px;flex-shrink:0}
+    .timeline-line{width:2px;background:#e0e0e0;margin:0 auto}
+    .narrative-box{background:#f0f4ff;border-radius:8px;padding:14px;font-size:13px;line-height:1.6;color:#333;margin:12px 0}
+    textarea{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;resize:vertical}
+    .modal-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+    .alert{position:fixed;top:70px;right:20px;background:#1a1a2e;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;z-index:300;display:none;max-width:320px}
+    .alert.show{display:block}
+    .audit-row{font-size:12px;padding:8px 14px;border-bottom:1px solid #f5f5f5;display:grid;grid-template-columns:140px 120px 100px 1fr;gap:8px}
+    .audit-header{background:#f8f9fa;font-weight:600;color:#555}
+    @media(max-width:700px){.charts{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
   </style>
 </head>
 <body>
 <nav>
-  <h1>Refund<span>IQ+</span> <small style="font-size:12px;color:#aaa">Admin</small></h1>
+  <div style="display:flex;align-items:center;gap:20px">
+    <h1>Refund<span>IQ+</span></h1>
+    <div class="nav-tabs">
+      <div class="nav-tab active" onclick="showPage('dashboard')">Dashboard</div>
+      <div class="nav-tab" onclick="showPage('refunds')">Refunds</div>
+      <div class="nav-tab" onclick="showPage('analytics')">Analytics</div>
+      <div class="nav-tab" onclick="showPage('audit')">Audit Trail</div>
+    </div>
+  </div>
   <div class="nav-right">
-    <span id="nav-user" style="font-size:14px;color:#ccc"></span>
-    <button onclick="logout()">Logout</button>
+    <span id="nav-user"></span>
+    <button class="btn-nav" onclick="logout()">Logout</button>
   </div>
 </nav>
 
-<div class="main">
-  <div class="stats" id="stats"></div>
+<div class="alert" id="alert"></div>
 
-  <div class="filters">
-    <select id="filter-status" onchange="loadRefunds()">
-      <option value="">All Statuses</option>
-      <option value="pending">Pending</option>
-      <option value="needs_evidence">Needs Evidence</option>
-      <option value="approved">Approved</option>
-      <option value="rejected">Rejected</option>
-    </select>
-    <select id="filter-risk" onchange="loadRefunds()">
-      <option value="">All Risk Levels</option>
-      <option value="Low Risk">Low Risk</option>
-      <option value="Medium Risk">Medium Risk</option>
-      <option value="High Risk">High Risk</option>
-    </select>
+<!-- DASHBOARD PAGE -->
+<div class="page active" id="page-dashboard">
+  <div class="stats" id="stats-grid"></div>
+  <div class="charts">
+    <div class="chart-card"><h3>Refunds per Month</h3><canvas id="chart-monthly" height="200"></canvas></div>
+    <div class="chart-card"><h3>Risk Distribution</h3><canvas id="chart-risk" height="200"></canvas></div>
+    <div class="chart-card"><h3>Fraud Rate Trend</h3><canvas id="chart-fraud" height="200"></canvas></div>
+    <div class="chart-card"><h3>Common Reasons</h3><canvas id="chart-reasons" height="200"></canvas></div>
   </div>
+</div>
 
+<!-- REFUNDS PAGE -->
+<div class="page" id="page-refunds">
   <div class="table-wrap">
+    <div class="table-toolbar">
+      <select id="f-status" onchange="loadRefunds()">
+        <option value="">All Statuses</option>
+        <option value="pending">Pending</option>
+        <option value="needs_evidence">Needs Evidence</option>
+        <option value="approved">Approved</option>
+        <option value="rejected">Rejected</option>
+      </select>
+      <select id="f-risk" onchange="loadRefunds()">
+        <option value="">All Risk Levels</option>
+        <option value="Low Risk">Low Risk</option>
+        <option value="Medium Risk">Medium Risk</option>
+        <option value="High Risk">High Risk</option>
+      </select>
+    </div>
     <table>
-      <thead>
-        <tr>
-          <th>#</th><th>Customer</th><th>Product</th><th>Amount</th>
-          <th>Risk Score</th><th>Risk Level</th><th>Status</th><th>Date</th><th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="refund-tbody"><tr><td colspan="9" class="empty">Loading...</td></tr></tbody>
+      <thead><tr>
+        <th>#</th><th>Customer</th><th>Product</th><th>Amount</th>
+        <th>Score</th><th>Risk</th><th>Status</th><th>Date</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="refund-tbody"><tr><td colspan="9" style="text-align:center;padding:30px;color:#aaa">Loading...</td></tr></tbody>
     </table>
   </div>
 </div>
 
-<!-- Detail Modal -->
-<div class="modal-overlay" id="modal">
+<!-- ANALYTICS PAGE -->
+<div class="page" id="page-analytics">
+  <div id="high-risk-users"></div>
+</div>
+
+<!-- AUDIT PAGE -->
+<div class="page" id="page-audit">
+  <div class="table-wrap">
+    <div class="table-toolbar">
+      <input type="text" id="audit-search" placeholder="Search action..." oninput="loadAudit()">
+    </div>
+    <div class="audit-row audit-header">
+      <span>Time</span><span>User</span><span>Action</span><span>Detail</span>
+    </div>
+    <div id="audit-body"></div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="overlay" id="modal">
   <div class="modal">
-    <h3>🔍 Refund Details</h3>
-    <div id="modal-body"></div>
-    <textarea id="admin-notes" rows="3" placeholder="Admin notes (optional)..."></textarea>
+    <h3 id="modal-title">Refund Details</h3>
+    <div id="modal-content"></div>
+    <textarea id="admin-notes" rows="2" placeholder="Admin notes (optional)..."></textarea>
     <div class="modal-actions">
-      <button class="btn-primary" style="background:#27ae60" onclick="decide('approved')">✓ Approve</button>
-      <button class="btn-primary" style="background:#e74c3c" onclick="decide('rejected')">✗ Reject</button>
-      <button class="btn-secondary" onclick="closeModal()">Close</button>
+      <button class="btn btn-success" onclick="decide('approved')">✓ Approve</button>
+      <button class="btn btn-danger"  onclick="decide('rejected')">✗ Reject</button>
+      <button class="btn btn-primary" style="background:#f39c12" onclick="decide('needs_evidence')">⚠ Request Evidence</button>
+      <button class="btn btn-secondary" onclick="downloadReport()">↓ PDF Report</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
     </div>
   </div>
 </div>
 
 <script>
-  const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  if (!token || user.role !== 'admin') window.location.href = '/';
-  document.getElementById('nav-user').textContent = user.name || '';
+const token = localStorage.getItem('token');
+const user  = JSON.parse(localStorage.getItem('user') || '{}');
+if (!token || !['admin','superadmin','moderator'].includes(user.role)) window.location.href = '/';
+document.getElementById('nav-user').textContent = `${user.name} (${user.role})`;
 
-  let currentRefundId = null;
-  let allRefunds = [];
+let currentRefundId = null;
+let allRefunds = [];
 
-  function logout() { localStorage.clear(); window.location.href = '/'; }
-  function closeModal() { document.getElementById('modal').classList.remove('show'); currentRefundId = null; }
+// SocketIO
+const socket = io();
+socket.emit('join', {room: 'admin'});
+socket.on('new_refund', d => showAlert(`🚨 New ${d.risk_level} refund #${d.refund_id}: ${d.product}`));
 
-  function riskClass(level) {
-    if (!level) return '';
-    if (level.includes('Low')) return 'risk-low';
-    if (level.includes('Medium')) return 'risk-medium';
-    return 'risk-high';
+function showAlert(msg) {
+  const el = document.getElementById('alert');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 5000);
+}
+
+function logout() { localStorage.clear(); window.location.href = '/'; }
+function closeModal() { document.getElementById('modal').classList.remove('show'); currentRefundId = null; }
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'analytics') loadAnalytics();
+  if (name === 'audit') loadAudit();
+}
+
+function riskClass(l) {
+  return l?.includes('Low') ? 'risk-low' : l?.includes('Medium') ? 'risk-medium' : 'risk-high';
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  const [sumR, monthR, riskR, reasonR] = await Promise.all([
+    fetch('/api/analytics/summary',          {headers:{Authorization:'Bearer '+token}}),
+    fetch('/api/analytics/monthly',          {headers:{Authorization:'Bearer '+token}}),
+    fetch('/api/analytics/risk-distribution',{headers:{Authorization:'Bearer '+token}}),
+    fetch('/api/analytics/reasons',          {headers:{Authorization:'Bearer '+token}})
+  ]);
+  const sum    = await sumR.json();
+  const month  = await monthR.json();
+  const risk   = await riskR.json();
+  const reason = await reasonR.json();
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat"><div class="val">${sum.total}</div><div class="lbl">Total Refunds</div></div>
+    <div class="stat"><div class="val" style="color:#f39c12">${sum.pending}</div><div class="lbl">Pending</div></div>
+    <div class="stat"><div class="val" style="color:#27ae60">${sum.approved}</div><div class="lbl">Approved</div></div>
+    <div class="stat"><div class="val" style="color:#e74c3c">${sum.rejected}</div><div class="lbl">Rejected</div></div>
+    <div class="stat"><div class="val" style="color:#e74c3c">${sum.high_risk}</div><div class="lbl">High Risk</div></div>
+    <div class="stat"><div class="val">${sum.avg_risk_score}</div><div class="lbl">Avg Risk Score</div></div>
+    <div class="stat"><div class="val">${sum.fraud_rate}%</div><div class="lbl">Fraud Rate</div></div>
+  `;
+
+  const labels = month.monthly.map(m => m.month);
+  new Chart(document.getElementById('chart-monthly'), {type:'bar',data:{labels,datasets:[
+    {label:'Total',data:month.monthly.map(m=>m.total),backgroundColor:'#4dabf7'},
+    {label:'High Risk',data:month.monthly.map(m=>m.high_risk),backgroundColor:'#e74c3c'}
+  ]},options:{plugins:{legend:{position:'bottom'}}}});
+
+  const riskLabels = risk.distribution.map(r=>r.level);
+  const riskColors = riskLabels.map(l=>l.includes('High')?'#e74c3c':l.includes('Medium')?'#f39c12':'#27ae60');
+  new Chart(document.getElementById('chart-risk'), {type:'doughnut',data:{
+    labels:riskLabels,datasets:[{data:risk.distribution.map(r=>r.count),backgroundColor:riskColors}]
+  },options:{plugins:{legend:{position:'bottom'}}}});
+
+  new Chart(document.getElementById('chart-fraud'), {type:'line',data:{labels,datasets:[{
+    label:'Fraud Rate %',
+    data:month.monthly.map(m=>m.total>0?Math.round(m.high_risk/m.total*100):0),
+    borderColor:'#e74c3c',tension:.4,fill:true,backgroundColor:'rgba(231,76,60,.1)'
+  }]},options:{plugins:{legend:{position:'bottom'}}}});
+
+  new Chart(document.getElementById('chart-reasons'), {type:'bar',data:{
+    labels:reason.reasons.map(r=>r.reason||'other'),
+    datasets:[{label:'Count',data:reason.reasons.map(r=>r.count),backgroundColor:'#6c5ce7'}]
+  },options:{indexAxis:'y',plugins:{legend:{display:false}}}});
+}
+
+// ── REFUNDS TABLE ─────────────────────────────────────────────────────────
+async function loadRefunds() {
+  const status = document.getElementById('f-status').value;
+  const risk   = document.getElementById('f-risk').value;
+  let url = '/api/admin/refunds?';
+  if (status) url += 'status='+encodeURIComponent(status)+'&';
+  if (risk)   url += 'risk_level='+encodeURIComponent(risk);
+
+  const r = await fetch(url, {headers:{Authorization:'Bearer '+token}});
+  if (r.status===401||r.status===403) return logout();
+  const d = await r.json();
+  allRefunds = d.refunds||[];
+
+  const tbody = document.getElementById('refund-tbody');
+  if (!allRefunds.length) {
+    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:30px;color:#aaa">No refunds found</td></tr>';
+    return;
   }
+  tbody.innerHTML = allRefunds.map(ref=>`
+    <tr>
+      <td>${ref.refund_id}</td>
+      <td><strong>${ref.user_name||'—'}</strong><br><small style="color:#aaa">${ref.user_email||''}</small></td>
+      <td>${ref.product_name}<br><small style="color:#aaa">#${ref.order_id}</small></td>
+      <td>₹${ref.refund_amount}</td>
+      <td><strong>${ref.risk_score}</strong>/100</td>
+      <td><span class="${riskClass(ref.risk_level)}">${ref.risk_level||'—'}</span></td>
+      <td><span class="badge ${ref.status}">${ref.status.replace('_',' ')}</span></td>
+      <td>${ref.created_at?.slice(0,10)}</td>
+      <td><button class="btn btn-primary btn-sm" onclick="openDetail(${ref.refund_id})">Review</button></td>
+    </tr>`).join('');
+}
 
-  async function loadRefunds() {
-    const status = document.getElementById('filter-status').value;
-    const risk = document.getElementById('filter-risk').value;
-    let url = '/api/admin/refunds?';
-    if (status) url += 'status='+encodeURIComponent(status)+'&';
-    if (risk) url += 'risk_level='+encodeURIComponent(risk);
+async function openDetail(id) {
+  currentRefundId = id;
+  const r = await fetch(`/api/admin/refund/${id}`, {headers:{Authorization:'Bearer '+token}});
+  const d = await r.json();
+  const ref = d.refund; const exp = d.explanation; const sim = d.similarity; const tl = d.timeline||[];
 
-    const r = await fetch(url, {headers: {'Authorization': 'Bearer '+token}});
-    if (r.status === 401 || r.status === 403) return logout();
-    const d = await r.json();
-    allRefunds = d.refunds || [];
+  document.getElementById('admin-notes').value = ref.admin_notes||'';
 
-    // Stats
-    const total = allRefunds.length;
-    const pending = allRefunds.filter(r => r.status === 'pending' || r.status === 'needs_evidence').length;
-    const approved = allRefunds.filter(r => r.status === 'approved').length;
-    const highRisk = allRefunds.filter(r => r.risk_level === 'High Risk').length;
-    document.getElementById('stats').innerHTML = `
-      <div class="stat-card"><div class="val">${total}</div><div class="lbl">Total Requests</div></div>
-      <div class="stat-card"><div class="val" style="color:#f39c12">${pending}</div><div class="lbl">Pending Review</div></div>
-      <div class="stat-card"><div class="val" style="color:#27ae60">${approved}</div><div class="lbl">Approved</div></div>
-      <div class="stat-card"><div class="val" style="color:#e74c3c">${highRisk}</div><div class="lbl">High Risk</div></div>
-    `;
+  const factors = exp?.factors?.map(f=>`
+    <div class="factor-item ${f.impact?.includes('High')?'high':f.impact?.includes('Low')?'low':''}">
+      <strong>${f.impact}</strong> — ${f.description}
+    </div>`).join('')||'<p style="color:#aaa;font-size:12px">No factors recorded</p>';
 
-    const tbody = document.getElementById('refund-tbody');
-    if (!allRefunds.length) {
-      tbody.innerHTML = '<tr><td colspan="9" class="empty">No refunds found.</td></tr>';
-      return;
-    }
-    tbody.innerHTML = allRefunds.map(ref => `
-      <tr>
-        <td>${ref.refund_id}</td>
-        <td><strong>${ref.user_name || '—'}</strong><br><small style="color:#aaa">${ref.user_email || ''}</small></td>
-        <td>${ref.product_name}<br><small style="color:#aaa">#${ref.order_id}</small></td>
-        <td>₹${ref.refund_amount}</td>
-        <td><strong>${ref.risk_score}</strong>/100</td>
-        <td><span class="${riskClass(ref.risk_level)}">${ref.risk_level || '—'}</span></td>
-        <td><span class="badge ${ref.status}">${ref.status.replace('_',' ')}</span></td>
-        <td>${new Date(ref.created_at).toLocaleDateString()}</td>
-        <td>
-          <button class="btn-sm btn-approve" onclick="openDetail(${ref.refund_id})">Review</button>
-        </td>
-      </tr>
-    `).join('');
-  }
+  const timelineHtml = tl.map((e,i)=>`
+    <div class="timeline-item">
+      <div>
+        <div class="timeline-dot"></div>
+        ${i<tl.length-1?'<div class="timeline-line" style="height:20px"></div>':''}
+      </div>
+      <div>
+        <strong>${e.event}</strong><br>
+        <span style="color:#888">${e.created_at?.slice(0,16).replace('T',' ')}</span>
+        ${e.detail?`<br><span style="color:#555">${e.detail}</span>`:''}
+      </div>
+    </div>`).join('');
 
-  function openDetail(id) {
-    currentRefundId = id;
-    const ref = allRefunds.find(r => r.refund_id === id);
-    if (!ref) return;
-    document.getElementById('admin-notes').value = ref.admin_notes || '';
-    document.getElementById('modal-body').innerHTML = `
-      <div class="detail-row"><span class="key">Customer</span><span>${ref.user_name} (${ref.user_email})</span></div>
-      <div class="detail-row"><span class="key">Product</span><span>${ref.product_name}</span></div>
-      <div class="detail-row"><span class="key">Order ID</span><span>#${ref.order_id}</span></div>
-      <div class="detail-row"><span class="key">Amount</span><span>₹${ref.refund_amount}</span></div>
-      <div class="detail-row"><span class="key">Reason</span><span>${ref.refund_reason || '—'}</span></div>
-      <div class="detail-row"><span class="key">Description</span><span>${ref.description || '—'}</span></div>
-      <div class="detail-row"><span class="key">Risk Score</span><span class="${riskClass(ref.risk_level)}">${ref.risk_score}/100 — ${ref.risk_level}</span></div>
-      <div class="detail-row"><span class="key">Status</span><span class="badge ${ref.status}">${ref.status.replace('_',' ')}</span></div>
-      <div class="detail-row"><span class="key">Submitted</span><span>${new Date(ref.created_at).toLocaleString()}</span></div>
-      ${ref.evidence && ref.evidence.length ? `<div style="margin-top:10px;font-size:12px;color:#888">${ref.evidence.length} evidence file(s) uploaded</div>` : ''}
-    `;
-    document.getElementById('modal').classList.add('show');
-  }
+  const simHtml = sim?.flagged ? `
+    <div style="background:#fff5f5;border:1px solid #f8d7da;border-radius:8px;padding:10px;margin:10px 0;font-size:12px">
+      ⚠️ <strong>Duplicate Alert</strong> — Similarity: ${(sim.similarity_score*100).toFixed(1)}%
+      with Refund #${sim.matched_refund_id} | Fraud Probability: ${(sim.fraud_probability*100).toFixed(1)}%
+    </div>` : '';
 
-  async function decide(status) {
-    if (!currentRefundId) return;
-    const notes = document.getElementById('admin-notes').value;
-    const r = await fetch(`/api/admin/refund/${currentRefundId}/decision`, {
-      method: 'POST',
-      headers: {'Authorization': 'Bearer '+token, 'Content-Type': 'application/json'},
-      body: JSON.stringify({status, notes})
-    });
-    if (!r.ok) return alert('Failed to update');
-    closeModal();
-    loadRefunds();
-  }
+  document.getElementById('modal-content').innerHTML = `
+    <div class="detail-row"><span class="k">Customer</span><span>${ref.user_name} &lt;${ref.user_email}&gt;</span></div>
+    <div class="detail-row"><span class="k">Product</span><span>${ref.product_name}</span></div>
+    <div class="detail-row"><span class="k">Order ID</span><span>#${ref.order_id}</span></div>
+    <div class="detail-row"><span class="k">Amount</span><span>₹${ref.refund_amount}</span></div>
+    <div class="detail-row"><span class="k">Reason</span><span>${ref.refund_reason||'—'}</span></div>
+    <div class="detail-row"><span class="k">Description</span><span>${ref.description||'—'}</span></div>
+    <div class="detail-row"><span class="k">Risk Score</span><span class="${riskClass(ref.risk_level)}">${ref.risk_score}/100 — ${ref.risk_level}</span></div>
+    <div class="detail-row"><span class="k">Status</span><span class="badge ${ref.status}">${ref.status.replace('_',' ')}</span></div>
+    ${simHtml}
+    ${exp?.narrative?`<div class="narrative-box">🤖 ${exp.narrative}</div>`:''}
+    <div style="margin:10px 0"><strong style="font-size:13px">Risk Factors</strong>${factors}</div>
+    <div style="margin:10px 0"><strong style="font-size:13px">Timeline</strong><div style="margin-top:8px">${timelineHtml||'<p style="color:#aaa;font-size:12px">No events</p>'}</div></div>
+  `;
+  document.getElementById('modal').classList.add('show');
+}
 
+async function decide(status) {
+  if (!currentRefundId) return;
+  const notes = document.getElementById('admin-notes').value;
+  await fetch(`/api/admin/refund/${currentRefundId}/decision`, {
+    method:'POST', headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+    body: JSON.stringify({status, notes})
+  });
+  closeModal();
   loadRefunds();
+  loadDashboard();
+}
+
+function downloadReport() {
+  if (!currentRefundId) return;
+  window.open(`/api/refund/${currentRefundId}/report?token=${token}`, '_blank');
+}
+
+// ── ANALYTICS PAGE ────────────────────────────────────────────────────────
+async function loadAnalytics() {
+  const r = await fetch('/api/analytics/high-risk-users', {headers:{Authorization:'Bearer '+token}});
+  const d = await r.json();
+  document.getElementById('high-risk-users').innerHTML = `
+    <h3 style="margin-bottom:14px">High Risk Users</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>User</th><th>Email</th><th>High Risk Claims</th><th>Avg Score</th></tr></thead>
+      <tbody>${(d.users||[]).map(u=>`
+        <tr>
+          <td>${u.name}</td>
+          <td>${u.email}</td>
+          <td style="color:#e74c3c;font-weight:600">${u.high_risk_count}</td>
+          <td>${u.avg_score}</td>
+        </tr>`).join('')||'<tr><td colspan="4" style="text-align:center;color:#aaa;padding:20px">No data</td></tr>'}
+      </tbody>
+    </table></div>`;
+}
+
+// ── AUDIT TRAIL ───────────────────────────────────────────────────────────
+async function loadAudit() {
+  const q = document.getElementById('audit-search').value;
+  const r = await fetch(`/api/admin/audit?action=${encodeURIComponent(q)}`, {headers:{Authorization:'Bearer '+token}});
+  if (!r.ok) return;
+  const d = await r.json();
+  document.getElementById('audit-body').innerHTML = (d.items||[]).map(i=>`
+    <div class="audit-row">
+      <span style="color:#888">${i.created_at?.slice(0,16).replace('T',' ')}</span>
+      <span>${i.user_id||'—'}</span>
+      <span><strong>${i.action}</strong></span>
+      <span>${i.resource||''} ${i.resource_id?'#'+i.resource_id:''} ${i.new_value?'→ '+i.new_value:''} <span style="color:#aaa;font-size:11px">${i.ip_address||''}</span></span>
+    </div>`).join('')||'<div style="padding:20px;text-align:center;color:#aaa">No audit records</div>';
+}
+
+// Init
+loadDashboard();
+loadRefunds();
 </script>
 </body>
 </html>

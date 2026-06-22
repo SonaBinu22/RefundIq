@@ -3,3 +3,8 @@ from .user import User
 from .refund import RefundRequest
 from .evidence import Evidence
 from .admin_log import AdminLog
+from .fraud_explanation import FraudExplanation
+from .similarity_result import SimilarityResult
+from .refund_timeline import RefundTimeline
+from .audit_trail import AuditTrail
+from .chat_message import ChatMessage
