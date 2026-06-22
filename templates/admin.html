@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RefundIQ+ – Admin Panel</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; }
+    nav { background: #1a1a2e; color: #fff; padding: 0 30px; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+    nav h1 { font-size: 20px; } nav h1 span { color: #f39c12; }
+    nav .nav-right { display: flex; gap: 16px; align-items: center; }
+    nav button { background: transparent; border: 1px solid #f39c12; color: #f39c12; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+    nav button:hover { background: #f39c12; color: #1a1a2e; }
+    .main { max-width: 1100px; margin: 28px auto; padding: 0 20px; }
+    .filters { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    select { padding: 9px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: #fff; }
+    .table-wrap { background: #fff; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.07); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #1a1a2e; color: #fff; padding: 13px 16px; text-align: left; font-size: 13px; }
+    td { padding: 13px 16px; font-size: 13px; color: #333; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+    tr:hover { background: #fafafa; }
+    .badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: capitalize; white-space: nowrap; }
+    .badge.pending { background: #fff3cd; color: #856404; }
+    .badge.approved { background: #d4edda; color: #155724; }
+    .badge.rejected { background: #f8d7da; color: #721c24; }
+    .badge.needs_evidence { background: #d1ecf1; color: #0c5460; }
+    .risk-low { color: #27ae60; font-weight: 600; }
+    .risk-medium { color: #f39c12; font-weight: 600; }
+    .risk-high { color: #e74c3c; font-weight: 600; }
+    .btn-sm { padding: 5px 12px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .btn-approve { background: #d4edda; color: #155724; }
+    .btn-reject { background: #f8d7da; color: #721c24; }
+    .btn-approve:hover { background: #b7d7be; }
+    .btn-reject:hover { background: #e0b0b5; }
+    .empty { text-align: center; padding: 50px; color: #aaa; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: #fff; border-radius: 14px; padding: 28px; width: 100%; max-width: 500px; }
+    .modal h3 { margin-bottom: 18px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+    .detail-row .key { color: #888; }
+    .breakdown-item { background: #fef9e7; border-radius: 6px; padding: 8px 12px; margin-bottom: 6px; font-size: 13px; }
+    textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; margin-top: 12px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .btn-primary { background: #007bff; color: #fff; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-secondary { background: #eee; color: #333; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .stats { display: flex; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
+    .stat-card { background: #fff; border-radius: 12px; padding: 18px 24px; flex: 1; min-width: 140px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+    .stat-card .val { font-size: 28px; font-weight: 700; color: #1a1a2e; }
+    .stat-card .lbl { font-size: 12px; color: #888; margin-top: 4px; }
+  </style>
+</head>
+<body>
+<nav>
+  <h1>Refund<span>IQ+</span> <small style="font-size:12px;color:#aaa">Admin</small></h1>
+  <div class="nav-right">
+    <span id="nav-user" style="font-size:14px;color:#ccc"></span>
+    <button onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="stats" id="stats"></div>
+
+  <div class="filters">
+    <select id="filter-status" onchange="loadRefunds()">
+      <option value="">All Statuses</option>
+      <option value="pending">Pending</option>
+      <option value="needs_evidence">Needs Evidence</option>
+      <option value="approved">Approved</option>
+      <option value="rejected">Rejected</option>
+    </select>
+    <select id="filter-risk" onchange="loadRefunds()">
+      <option value="">All Risk Levels</option>
+      <option value="Low Risk">Low Risk</option>
+      <option value="Medium Risk">Medium Risk</option>
+      <option value="High Risk">High Risk</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Customer</th><th>Product</th><th>Amount</th>
+          <th>Risk Score</th><th>Risk Level</th><th>Status</th><th>Date</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="refund-tbody"><tr><td colspan="9" class="empty">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3>🔍 Refund Details</h3>
+    <div id="modal-body"></div>
+    <textarea id="admin-notes" rows="3" placeholder="Admin notes (optional)..."></textarea>
+    <div class="modal-actions">
+      <button class="btn-primary" style="background:#27ae60" onclick="decide('approved')">✓ Approve</button>
+      <button class="btn-primary" style="background:#e74c3c" onclick="decide('rejected')">✗ Reject</button>
+      <button class="btn-secondary" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  if (!token || user.role !== 'admin') window.location.href = '/';
+  document.getElementById('nav-user').textContent = user.name || '';
+
+  let currentRefundId = null;
+  let allRefunds = [];
+
+  function logout() { localStorage.clear(); window.location.href = '/'; }
+  function closeModal() { document.getElementById('modal').classList.remove('show'); currentRefundId = null; }
+
+  function riskClass(level) {
+    if (!level) return '';
+    if (level.includes('Low')) return 'risk-low';
+    if (level.includes('Medium')) return 'risk-medium';
+    return 'risk-high';
+  }
+
+  async function loadRefunds() {
+    const status = document.getElementById('filter-status').value;
+    const risk = document.getElementById('filter-risk').value;
+    let url = '/api/admin/refunds?';
+    if (status) url += 'status='+encodeURIComponent(status)+'&';
+    if (risk) url += 'risk_level='+encodeURIComponent(risk);
+
+    const r = await fetch(url, {headers: {'Authorization': 'Bearer '+token}});
+    if (r.status === 401 || r.status === 403) return logout();
+    const d = await r.json();
+    allRefunds = d.refunds || [];
+
+    // Stats
+    const total = allRefunds.length;
+    const pending = allRefunds.filter(r => r.status === 'pending' || r.status === 'needs_evidence').length;
+    const approved = allRefunds.filter(r => r.status === 'approved').length;
+    const highRisk = allRefunds.filter(r => r.risk_level === 'High Risk').length;
+    document.getElementById('stats').innerHTML = `
+      <div class="stat-card"><div class="val">${total}</div><div class="lbl">Total Requests</div></div>
+      <div class="stat-card"><div class="val" style="color:#f39c12">${pending}</div><div class="lbl">Pending Review</div></div>
+      <div class="stat-card"><div class="val" style="color:#27ae60">${approved}</div><div class="lbl">Approved</div></div>
+      <div class="stat-card"><div class="val" style="color:#e74c3c">${highRisk}</div><div class="lbl">High Risk</div></div>
+    `;
+
+    const tbody = document.getElementById('refund-tbody');
+    if (!allRefunds.length) {
+      tbody.innerHTML = '<tr><td colspan="9" class="empty">No refunds found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = allRefunds.map(ref => `
+      <tr>
+        <td>${ref.refund_id}</td>
+        <td><strong>${ref.user_name || '—'}</strong><br><small style="color:#aaa">${ref.user_email || ''}</small></td>
+        <td>${ref.product_name}<br><small style="color:#aaa">#${ref.order_id}</small></td>
+        <td>₹${ref.refund_amount}</td>
+        <td><strong>${ref.risk_score}</strong>/100</td>
+        <td><span class="${riskClass(ref.risk_level)}">${ref.risk_level || '—'}</span></td>
+        <td><span class="badge ${ref.status}">${ref.status.replace('_',' ')}</span></td>
+        <td>${new Date(ref.created_at).toLocaleDateString()}</td>
+        <td>
+          <button class="btn-sm btn-approve" onclick="openDetail(${ref.refund_id})">Review</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function openDetail(id) {
+    currentRefundId = id;
+    const ref = allRefunds.find(r => r.refund_id === id);
+    if (!ref) return;
+    document.getElementById('admin-notes').value = ref.admin_notes || '';
+    document.getElementById('modal-body').innerHTML = `
+      <div class="detail-row"><span class="key">Customer</span><span>${ref.user_name} (${ref.user_email})</span></div>
+      <div class="detail-row"><span class="key">Product</span><span>${ref.product_name}</span></div>
+      <div class="detail-row"><span class="key">Order ID</span><span>#${ref.order_id}</span></div>
+      <div class="detail-row"><span class="key">Amount</span><span>₹${ref.refund_amount}</span></div>
+      <div class="detail-row"><span class="key">Reason</span><span>${ref.refund_reason || '—'}</span></div>
+      <div class="detail-row"><span class="key">Description</span><span>${ref.description || '—'}</span></div>
+      <div class="detail-row"><span class="key">Risk Score</span><span class="${riskClass(ref.risk_level)}">${ref.risk_score}/100 — ${ref.risk_level}</span></div>
+      <div class="detail-row"><span class="key">Status</span><span class="badge ${ref.status}">${ref.status.replace('_',' ')}</span></div>
+      <div class="detail-row"><span class="key">Submitted</span><span>${new Date(ref.created_at).toLocaleString()}</span></div>
+      ${ref.evidence && ref.evidence.length ? `<div style="margin-top:10px;font-size:12px;color:#888">${ref.evidence.length} evidence file(s) uploaded</div>` : ''}
+    `;
+    document.getElementById('modal').classList.add('show');
+  }
+
+  async function decide(status) {
+    if (!currentRefundId) return;
+    const notes = document.getElementById('admin-notes').value;
+    const r = await fetch(`/api/admin/refund/${currentRefundId}/decision`, {
+      method: 'POST',
+      headers: {'Authorization': 'Bearer '+token, 'Content-Type': 'application/json'},
+      body: JSON.stringify({status, notes})
+    });
+    if (!r.ok) return alert('Failed to update');
+    closeModal();
+    loadRefunds();
+  }
+
+  loadRefunds();
+</script>
+</body>
+</html>

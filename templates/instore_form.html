@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>In-Store Purchase Return – RefundIQ+</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f4f6f8;
+            padding: 40px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            background: #fff;
+            padding: 30px;
+            margin: auto;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: 600;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        button {
+            margin-top: 25px;
+            width: 100%;
+            padding: 14px;
+            background-color: #3498db;
+            color: #fff;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #555;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🛍️ In-Store Purchase Return</h2>
+        <form action="/submit-instore" method="post" enctype="multipart/form-data">
+            <label for="customer_name">Customer Name</label>
+            <input type="text" name="customer_name" id="customer_name" required>
+
+            <label for="return_address">Return Address</label>
+            <textarea name="return_address" id="return_address" rows="3" required></textarea>
+
+            <label for="bill_number">Bill Number</label>
+            <input type="text" name="bill_number" id="bill_number" required>
+
+            <label for="bill_image">Upload Bill Image</label>
+            <input type="file" name="bill_image" id="bill_image" accept="image/*" required>
+
+            <label for="product_name">Product Name</label>
+            <input type="text" name="product_name" id="product_name" required>
+
+            <label for="purchase_date">Purchase Date</label>
+            <input type="date" name="purchase_date" id="purchase_date" required>
+
+            <label for="used_days">How many days used?</label>
+            <input type="number" name="used_days" id="used_days" min="0" required>
+
+            <label for="warranty_card">Upload Warranty Card (optional)</label>
+            <input type="file" name="warranty_card" id="warranty_card" accept="image/*">
+
+            <button type="submit">Submit Return Request</button>
+        </form>
+
+        <a href="/choose-return" class="back-link">← Back to Return Method</a>
+    </div>
+</body>
+</html>

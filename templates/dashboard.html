@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RefundIQ+ – Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; }
+    nav { background: #1a1a2e; color: #fff; padding: 0 30px; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+    nav h1 { font-size: 20px; } nav h1 span { color: #4dabf7; }
+    nav .nav-right { display: flex; gap: 16px; align-items: center; }
+    nav button { background: transparent; border: 1px solid #4dabf7; color: #4dabf7; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+    nav button:hover { background: #4dabf7; color: #1a1a2e; }
+    .main { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+    .welcome { margin-bottom: 24px; }
+    .welcome h2 { color: #1a1a2e; font-size: 22px; }
+    .welcome p { color: #888; margin-top: 4px; }
+    .btn-primary { background: #007bff; color: #fff; border: none; padding: 11px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .btn-primary:hover { background: #0056b3; }
+    .section-title { font-size: 17px; font-weight: 700; color: #1a1a2e; margin: 28px 0 14px; }
+    .refund-card { background: #fff; border-radius: 12px; padding: 18px 22px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); display: flex; justify-content: space-between; align-items: center; }
+    .refund-info h4 { font-size: 15px; color: #222; margin-bottom: 4px; }
+    .refund-info p { font-size: 13px; color: #888; }
+    .badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: capitalize; }
+    .badge.pending { background: #fff3cd; color: #856404; }
+    .badge.approved { background: #d4edda; color: #155724; }
+    .badge.rejected { background: #f8d7da; color: #721c24; }
+    .badge.needs_evidence { background: #d1ecf1; color: #0c5460; }
+    .risk-low { color: #27ae60; font-weight: 600; }
+    .risk-medium { color: #f39c12; font-weight: 600; }
+    .risk-high { color: #e74c3c; font-weight: 600; }
+    .empty { text-align: center; padding: 40px; color: #aaa; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: #fff; border-radius: 16px; padding: 30px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; }
+    .modal h3 { margin-bottom: 20px; color: #1a1a2e; }
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 5px; }
+    input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #007bff; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-secondary { background: #eee; color: #333; border: none; padding: 11px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600; }
+    .msg { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; display: none; }
+    .msg.error { background: #fde8e8; color: #c0392b; display: block; }
+    .msg.success { background: #e8f8e8; color: #27ae60; display: block; }
+  </style>
+</head>
+<body>
+<nav>
+  <h1>Refund<span>IQ+</span></h1>
+  <div class="nav-right">
+    <span id="nav-user" style="font-size:14px;color:#ccc"></span>
+    <button onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="welcome">
+    <h2>My Refund Requests</h2>
+    <p>Track and manage your refund submissions</p>
+  </div>
+  <button class="btn-primary" onclick="openModal()">+ New Refund Request</button>
+
+  <div class="section-title">Your Requests</div>
+  <div id="refunds-list"><div class="empty">Loading...</div></div>
+</div>
+
+<!-- Submit Refund Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3>📩 Submit Refund Request</h3>
+    <div id="modal-msg" class="msg"></div>
+    <div class="form-group"><label>Product Name *</label><input type="text" id="f-product" placeholder="e.g. Wireless Headphones"></div>
+    <div class="form-group"><label>Order ID *</label><input type="text" id="f-order" placeholder="e.g. ORD-12345"></div>
+    <div class="form-group"><label>Purchase Date</label><input type="date" id="f-date"></div>
+    <div class="form-group"><label>Refund Amount (₹) *</label><input type="number" id="f-amount" placeholder="e.g. 1999" min="1"></div>
+    <div class="form-group">
+      <label>Reason</label>
+      <select id="f-reason">
+        <option value="defective">Defective / Not Working</option>
+        <option value="damaged">Damaged on Arrival</option>
+        <option value="wrong_item">Wrong Item Delivered</option>
+        <option value="not_as_described">Not as Described</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Description</label><textarea id="f-desc" rows="3" placeholder="Describe the issue in detail..."></textarea></div>
+    <div class="form-group"><label>Photo Evidence (image/video) *</label><input type="file" id="f-photo" accept="image/*,video/mp4"></div>
+    <div class="form-group"><label>Invoice / Bill (PDF or image, optional)</label><input type="file" id="f-invoice" accept="image/*,.pdf"></div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="submitRefund()">Submit Request</button>
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  if (!token) window.location.href = '/';
+
+  document.getElementById('nav-user').textContent = user.name || '';
+
+  function logout() { localStorage.clear(); window.location.href = '/'; }
+  function openModal() { document.getElementById('modal').classList.add('show'); }
+  function closeModal() { document.getElementById('modal').classList.remove('show'); showModalMsg('',''); }
+  function showModalMsg(text, type) {
+    const el = document.getElementById('modal-msg');
+    el.className = 'msg' + (type ? ' '+type : '');
+    el.textContent = text;
+    el.style.display = text ? 'block' : 'none';
+  }
+
+  function riskClass(level) {
+    if (!level) return '';
+    if (level.includes('Low')) return 'risk-low';
+    if (level.includes('Medium')) return 'risk-medium';
+    return 'risk-high';
+  }
+
+  async function loadRefunds() {
+    const r = await fetch('/api/my-refunds', {headers: {'Authorization': 'Bearer '+token}});
+    if (r.status === 401) return logout();
+    const d = await r.json();
+    const list = document.getElementById('refunds-list');
+    if (!d.refunds || d.refunds.length === 0) {
+      list.innerHTML = '<div class="empty">No refund requests yet. Submit your first one!</div>';
+      return;
+    }
+    list.innerHTML = d.refunds.map(ref => `
+      <div class="refund-card">
+        <div class="refund-info">
+          <h4>${ref.product_name} <small style="color:#aaa;font-weight:400">— Order #${ref.order_id}</small></h4>
+          <p>₹${ref.refund_amount} &nbsp;•&nbsp; ${new Date(ref.created_at).toLocaleDateString()} &nbsp;•&nbsp; <span class="${riskClass(ref.risk_level)}">${ref.risk_level || ''}</span> (score: ${ref.risk_score})</p>
+        </div>
+        <span class="badge ${ref.status}">${ref.status.replace('_',' ')}</span>
+      </div>
+    `).join('');
+  }
+
+  async function submitRefund() {
+    const product = document.getElementById('f-product').value.trim();
+    const order = document.getElementById('f-order').value.trim();
+    const amount = document.getElementById('f-amount').value;
+    const photo = document.getElementById('f-photo').files[0];
+    if (!product || !order || !amount) return showModalMsg('Product, Order ID and Amount are required.', 'error');
+    if (!photo) return showModalMsg('Please upload a photo or video as evidence.', 'error');
+
+    const fd = new FormData();
+    fd.append('product_name', product);
+    fd.append('order_id', order);
+    fd.append('purchase_date', document.getElementById('f-date').value);
+    fd.append('refund_amount', amount);
+    fd.append('refund_reason', document.getElementById('f-reason').value);
+    fd.append('description', document.getElementById('f-desc').value);
+    fd.append('photo', photo);
+    const invoice = document.getElementById('f-invoice').files[0];
+    if (invoice) fd.append('invoice', invoice);
+
+    showModalMsg('Analyzing evidence...', 'success');
+    const r = await fetch('/api/submit-refund', {method:'POST', headers:{'Authorization':'Bearer '+token}, body: fd});
+    const d = await r.json();
+    if (!r.ok) return showModalMsg(d.error || 'Submission failed', 'error');
+
+    showModalMsg(`Submitted! Risk Score: ${d.risk_score} (${d.risk_level})`, 'success');
+    setTimeout(() => { closeModal(); loadRefunds(); }, 2000);
+  }
+
+  loadRefunds();
+</script>
+</body>
+</html>

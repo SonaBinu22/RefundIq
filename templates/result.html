@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RefundIQ+ – Refund Analysis Result</title>
+    <style>
+        body {
+            background-color: #f4f6f8;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 40px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            background-color: #fff;
+            padding: 30px;
+            margin: auto;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+        }
+
+        h2 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .label {
+            font-weight: 600;
+            margin-top: 15px;
+            color: #444;
+        }
+
+        .value {
+            margin: 5px 0 15px 0;
+            padding: 10px;
+            background-color: #f0f4f8;
+            border-radius: 8px;
+        }
+
+        .category-green {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .category-yellow {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .category-red {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 30px;
+            text-decoration: none;
+            color: #007bff;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🔍 Refund Analysis Result</h2>
+
+        <div class="label">Product:</div>
+        <div class="value">{{ product }}</div>
+
+        <div class="label">Reason:</div>
+        <div class="value">{{ reason }}</div>
+
+        <div class="label">Customer Trust Category:</div>
+        {% if 'Green' in category %}
+            <div class="category-green">{{ category }}</div>
+        {% elif 'Yellow' in category %}
+            <div class="category-yellow">{{ category }}</div>
+        {% else %}
+            <div class="category-red">{{ category }}</div>
+        {% endif %}
+
+        <div class="label">AI Verdict on Reason:</div>
+        <div class="value">{{ result }}</div>
+
+        <div class="label">AI Verdict on Image:</div>
+        <div class="value">{{ image_result }}</div>
+
+        <div class="label">Restock Suggestion:</div>
+        <div class="value">{{ restock_decision }}</div>
+
+<a href="/customer-details" class="back-link">→ Continue to Customer Details</a>
+    </div>
+</body>
+</html>

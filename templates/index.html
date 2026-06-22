@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RefundIQ+ – Login</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #1a1a2e, #16213e); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .card { background: #fff; border-radius: 16px; padding: 40px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .logo { text-align: center; margin-bottom: 30px; }
+    .logo h1 { font-size: 28px; color: #1a1a2e; }
+    .logo span { color: #007bff; }
+    .tabs { display: flex; border-bottom: 2px solid #eee; margin-bottom: 24px; }
+    .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; font-weight: 600; color: #888; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all .2s; }
+    .tab.active { color: #007bff; border-bottom-color: #007bff; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 5px; }
+    input { width: 100%; padding: 11px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; transition: border-color .2s; }
+    input:focus { outline: none; border-color: #007bff; }
+    .btn { width: 100%; padding: 13px; background: #007bff; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background .2s; margin-top: 4px; }
+    .btn:hover { background: #0056b3; }
+    .msg { padding: 10px 14px; border-radius: 8px; font-size: 14px; margin-bottom: 14px; display: none; }
+    .msg.error { background: #fde8e8; color: #c0392b; display: block; }
+    .msg.success { background: #e8f8e8; color: #27ae60; display: block; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo"><h1>Refund<span>IQ+</span></h1><p style="color:#888;font-size:13px">Fraud-aware refund management</p></div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('login')">Login</div>
+    <div class="tab" onclick="switchTab('register')">Register</div>
+  </div>
+  <div id="msg" class="msg"></div>
+
+  <div id="login-panel" class="panel active">
+    <div class="form-group"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="login-pass" placeholder="••••••••"></div>
+    <button class="btn" onclick="doLogin()">Sign In</button>
+  </div>
+
+  <div id="register-panel" class="panel">
+    <div class="form-group"><label>Full Name</label><input type="text" id="reg-name" placeholder="John Doe"></div>
+    <div class="form-group"><label>Email</label><input type="email" id="reg-email" placeholder="you@example.com"></div>
+    <div class="form-group"><label>Phone (optional)</label><input type="tel" id="reg-phone" placeholder="+91 9999999999"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="reg-pass" placeholder="••••••••"></div>
+    <button class="btn" onclick="doRegister()">Create Account</button>
+  </div>
+</div>
+<script>
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
+    document.getElementById('login-panel').classList.toggle('active', tab==='login');
+    document.getElementById('register-panel').classList.toggle('active', tab==='register');
+    showMsg('','');
+  }
+  function showMsg(text, type) {
+    const el = document.getElementById('msg');
+    el.className = 'msg' + (type ? ' '+type : '');
+    el.textContent = text;
+    el.style.display = text ? 'block' : 'none';
+  }
+  async function doLogin() {
+    const email = document.getElementById('login-email').value;
+    const pass = document.getElementById('login-pass').value;
+    if (!email || !pass) return showMsg('Please fill all fields.', 'error');
+    const r = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email, password: pass})});
+    const d = await r.json();
+    if (!r.ok) return showMsg(d.error || 'Login failed', 'error');
+    localStorage.setItem('token', d.token);
+    localStorage.setItem('user', JSON.stringify(d.user));
+    window.location.href = d.user.role === 'admin' ? '/dashboard/admin' : '/dashboard';
+  }
+  async function doRegister() {
+    const name = document.getElementById('reg-name').value;
+    const email = document.getElementById('reg-email').value;
+    const phone = document.getElementById('reg-phone').value;
+    const pass = document.getElementById('reg-pass').value;
+    if (!name || !email || !pass) return showMsg('Name, email and password are required.', 'error');
+    const r = await fetch('/api/register', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, email, phone, password: pass})});
+    const d = await r.json();
+    if (!r.ok) return showMsg(d.error || 'Registration failed', 'error');
+    localStorage.setItem('token', d.token);
+    localStorage.setItem('user', JSON.stringify(d.user));
+    window.location.href = '/dashboard';
+  }
+  // Auto-redirect if already logged in
+  if (localStorage.getItem('token')) {
+    const u = JSON.parse(localStorage.getItem('user') || '{}');
+    window.location.href = u.role === 'admin' ? '/dashboard/admin' : '/dashboard';
+  }
+</script>
+</body>
+</html>

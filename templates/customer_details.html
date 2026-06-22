@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Customer Details – RefundIQ+</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f4f6f8;
+            padding: 40px;
+        }
+        .container {
+            max-width: 650px;
+            background: white;
+            padding: 30px;
+            margin: auto;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        button {
+            margin-top: 25px;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            width: 100%;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🔒 Customer Details</h2>
+        <form method="POST" enctype="multipart/form-data">
+            <label for="name">Full Name</label>
+            <input type="text" name="name" required>
+
+            <label for="email">Email Address</label>
+            <input type="email" name="email" required>
+
+            <label for="phone">Phone Number</label>
+            <input type="tel" name="phone" required>
+
+            <label for="address">Return Address</label>
+            <textarea name="address" rows="3" required></textarea>
+
+            <label for="bill_number">Bill Number</label>
+            <input type="text" name="bill_number" required>
+
+            <label for="bill_image">Upload Bill Image</label>
+            <input type="file" name="bill_image" accept="image/*" required>
+
+            <label for="purchase_date">Purchase Date</label>
+            <input type="date" name="purchase_date" required>
+
+            <label for="used_days">Number of Days Used</label>
+            <input type="number" name="used_days" min="0" required>
+
+            <label for="warranty_status">Warranty Status</label>
+            <select name="warranty_status" required>
+                <option value="">-- Select --</option>
+                <option value="yes">Under Warranty</option>
+                <option value="no">Out of Warranty</option>
+            </select>
+
+            <label for="warranty_card">Upload Warranty Card (optional)</label>
+            <input type="file" name="warranty_card" accept="image/*">
+
+            <button type="submit">Submit Details</button>
+        </form>
+    </div>
+</body>
+</html>

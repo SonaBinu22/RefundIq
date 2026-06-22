@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Return Source - RefundIQ+</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f0f2f5;
+            padding: 40px;
+            color: #333;
+        }
+        .container {
+            max-width: 500px;
+            background: white;
+            padding: 30px;
+            margin: auto;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            text-align: center;
+        }
+        h2 {
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            margin-top: 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .shop-btn {
+            background-color: #3498db;
+            color: white;
+        }
+        .online-btn {
+            background-color: #2ecc71;
+            color: white;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>How did you purchase the product?</h2>
+        <form action="/return-instore" method="get">
+            <button class="shop-btn" type="submit">🛍️ Bought from Physical Store</button>
+        </form>
+        <form action="/" method="get">
+            <button class="online-btn" type="submit">🛒 Bought Online</button>
+        </form>
+    </div>
+</body>
+</html>
