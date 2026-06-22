@@ -1,5 +1,4 @@
 import os
-import warnings
 from datetime import timedelta
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -13,21 +12,18 @@ try:
 except ImportError:
     pass
 
-_DEFAULT_SECRET = 'refundiq-secret-key-2024'
-_DEFAULT_JWT    = 'refundiq-jwt-secret-2024'
+_DEFAULT_SECRET = None
+_DEFAULT_JWT    = None
 
 
 class Config:
-    SECRET_KEY     = os.environ.get('SECRET_KEY', _DEFAULT_SECRET)
-    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', _DEFAULT_JWT)
+    SECRET_KEY     = os.environ.get('SECRET_KEY')
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
 
-    # Warn loudly if running with default secrets
-    if SECRET_KEY == _DEFAULT_SECRET or JWT_SECRET_KEY == _DEFAULT_JWT:
-        warnings.warn(
-            '\n⚠️  SECURITY WARNING: Using default secret keys! '
-            'Set SECRET_KEY and JWT_SECRET_KEY environment variables '
-            'or add them to a .env file before deploying.',
-            stacklevel=2
+    if not SECRET_KEY or not JWT_SECRET_KEY:
+        raise RuntimeError(
+            '\n🚫 SECRET_KEY and JWT_SECRET_KEY must be set as environment variables.\n'
+            '   Copy .env.example to .env and fill in real values.'
         )
 
     SQLALCHEMY_DATABASE_URI = os.environ.get(
